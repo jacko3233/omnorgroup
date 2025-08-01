@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ job['name'] }} - {{ brand }}{% endblock %}
+{% block content %}
+<a class="btn btn-link mb-3" href="{{ url_for('index') }}">&larr; Back to jobs</a>
+<h2>{{ job['name'] }} <small class="text-muted">- {{ job['status'] }}</small></h2>
+<p>{{ job['description'] }}</p>
+{% if job['status'] != 'Closed' %}
+  <form class="mb-3" method="post" action="{{ url_for('close_job', job_id=job['id']) }}">
+    <button class="btn btn-warning" type="submit">Close Job</button>
+  </form>
+{% endif %}
+<h4>Hire Items</h4>
+<ul class="list-group mb-3">
+{% for h in hires %}
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <span>
+      {{ h['item_name'] }} &ndash; £{{ '%.2f'|format(h['daily_rate']) }}/day
+      from {{ h['on_hire'] }} to {{ h['off_hire'] or 'ongoing' }}
+    </span>
+    <span class="badge bg-secondary">{{ h['cost'] and ('£%.2f'|format(h['cost'])) or 'TBD' }}</span>
+    {% if not h['off_hire'] %}
+      <form class="d-flex ms-3" method="post" action="{{ url_for('off_hire', hire_id=h['id']) }}">
+        <input name="off_hire" type="date" class="form-control form-control-sm me-2" required>
+        <button class="btn btn-sm btn-outline-success me-2" type="submit">Close</button>
+      </form>
+    {% endif %}
+    <form class="d-flex" method="post" action="{{ url_for('delete_hire', hire_id=h['id']) }}" onsubmit="return confirm('Delete this hire?');">
+      <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+    </form>
+  </li>
+{% endfor %}
+</ul>
+<form class="row gy-2" method="post" action="{{ url_for('add_hire', job_id=job['id']) }}">
+  <div class="col-md-4">
+    <input name="item" class="form-control" placeholder="Item" required>
+  </div>
+  <div class="col-md-3">
+    <div class="input-group">
+      <span class="input-group-text">£</span>
+      <input name="rate" type="number" step="0.01" min="0" class="form-control" placeholder="Rate" required>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <input name="on_hire" type="date" class="form-control" required>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-secondary w-100" type="submit">Add Hire</button>
+  </div>
+</form>
+{% endblock %}
