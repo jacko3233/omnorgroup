@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Jobs - {{ brand }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">Jobs</h1>
+<form class="row gy-2 mb-4" method="post" action="{{ url_for('add_job') }}">
+  <div class="col-sm-4">
+    <input name="name" class="form-control" placeholder="Job name" required>
+  </div>
+  <div class="col-sm-6">
+    <input name="description" class="form-control" placeholder="Description">
+  </div>
+  <div class="col-sm-2">
+    <button class="btn btn-primary w-100" type="submit">Add Job</button>
+  </div>
+</form>
+{% for j in jobs %}
+  <div class="card mb-4">
+    <div class="card-body">
+<h5 class="card-title">
+  <a href="{{ url_for('job_detail', job_id=j['id']) }}" class="link-dark text-decoration-none">{{ j['name'] }}</a>
+  <small class="text-muted">- {{ j['status'] }}</small>
+</h5>
+<p class="card-text">{{ j['description'] }}</p>
+<div class="mb-2">
+  {% if j['status'] != 'Closed' %}
+    <form class="d-inline" method="post" action="{{ url_for('close_job', job_id=j['id']) }}">
+      <button class="btn btn-sm btn-warning" type="submit">Close Job</button>
+    </form>
+  {% endif %}
+  <form class="d-inline" method="post" action="{{ url_for('delete_job', job_id=j['id']) }}" onsubmit="return confirm('Delete this job and all hires?');">
+    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+  </form>
+</div>
+      <h6>Hire Items</h6>
+      <ul class="list-group mb-3">
+      {% for h in hires %}
+        {% if h['job_id']==j['id'] %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              {{ h['item_name'] }} &ndash; £{{ '%.2f'|format(h['daily_rate']) }}/day
+              from {{ h['on_hire'] }} to {{ h['off_hire'] or 'ongoing' }}
+            </span>
+            <span class="badge bg-secondary">{{ h['cost'] and ('£%.2f'|format(h['cost'])) or 'TBD' }}</span>
+            {% if not h['off_hire'] %}
+              <form class="d-flex ms-3" method="post" action="{{ url_for('off_hire', hire_id=h['id']) }}">
+                <input name="off_hire" type="date" class="form-control form-control-sm me-2" required>
+                <button class="btn btn-sm btn-outline-success" type="submit">Close</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endif %}
+      {% endfor %}
+      </ul>
+      <form class="row gy-2" method="post" action="{{ url_for('add_hire', job_id=j['id']) }}">
+        <div class="col-md-4">
+          <input name="item" class="form-control" placeholder="Item" required>
+        </div>
+        <div class="col-md-3">
+          <div class="input-group">
+            <span class="input-group-text">£</span>
+            <input name="rate" type="number" step="0.01" min="0" class="form-control" placeholder="Rate" required>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <input name="on_hire" type="date" class="form-control" required>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-secondary w-100" type="submit">Add Hire</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% else %}
+  <p>No jobs found.</p>
+{% endfor %}
+{% endblock %}
